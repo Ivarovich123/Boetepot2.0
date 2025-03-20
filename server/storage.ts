@@ -224,7 +224,15 @@ export class MemStorage implements IStorage {
     }
     
     const id = this.currentReasonId++;
-    const reason: Reason = { ...insertReason, id };
+    // Ensure bedrag is a number and default to 5 if not provided
+    const bedrag = insertReason.bedrag !== undefined ? Number(insertReason.bedrag) : 5;
+    
+    const reason: Reason = { 
+      id,
+      naam: insertReason.naam,
+      bedrag
+    };
+    
     this.reasons.set(id, reason);
     return reason;
   }

@@ -164,6 +164,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Login failed" });
     }
   });
+  
+  // Reset all fines (start a new season)
+  router.post("/reset", async (req: Request, res: Response) => {
+    try {
+      await storage.resetAllFines();
+      res.json({ message: "Alle boetes zijn gereset voor het nieuwe seizoen" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to reset fines" });
+    }
+  });
+  
+  // Get all reasons
+  router.get("/reasons", async (req: Request, res: Response) => {
+    try {
+      const reasons = await storage.getAllReasons();
+      res.json(reasons);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get reasons" });
+    }
+  });
+  
+  // Add a new reason
+  router.post("/reasons/add", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertReasonSchema.parse(req.body);
+      
+      const newReason = await storage.addReason({
+        naam: validatedData.naam,
+        bedrag: Number(validatedData.bedrag)
+      });
+      
+      res.status(201).json({ 
+        message: "Reden succesvol toegevoegd!",
+        reason: newReason 
+      });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        res.status(400).json({ message: error.message || "Failed to add reason" });
+      }
+    }
+  });
+  
+  // Delete a reason
+  router.delete("/reasons/:id", async (req: Request, res: Response) => {
+    try {
+      const id = Number(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      await storage.deleteReason(id);
+      res.json({ message: "Reden succesvol verwijderd" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete reason" });
+    }
+  });
 
   app.use("/api/fines", router);
 

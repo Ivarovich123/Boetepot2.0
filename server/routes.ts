@@ -109,6 +109,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get player list" });
     }
   });
+  
+  // Add a new player
+  router.post("/players/add", async (req: Request, res: Response) => {
+    try {
+      const { playerName } = req.body;
+      
+      if (!playerName) {
+        return res.status(400).json({ message: "Speler naam is verplicht" });
+      }
+      
+      const newPlayer = await storage.addPlayer(playerName);
+      res.status(201).json({ 
+        message: "Speler succesvol toegevoegd!",
+        player: newPlayer 
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Failed to add player" });
+    }
+  });
+  
+  // Delete a player
+  router.delete("/players/:name", async (req: Request, res: Response) => {
+    try {
+      const playerName = decodeURIComponent(req.params.name);
+      
+      if (!playerName) {
+        return res.status(400).json({ message: "Speler naam is verplicht" });
+      }
+      
+      await storage.deletePlayer(playerName);
+      res.json({ message: "Speler succesvol verwijderd" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete player" });
+    }
+  });
 
   // Admin login
   router.post("/login", async (req: Request, res: Response) => {
@@ -120,7 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Simple password check (would use proper auth in production)
-      if (password === "admin") {
+      if (password === "Mandje123") {
         return res.status(200).json({ message: "Login successful" });
       } else {
         return res.status(401).json({ message: "Incorrect password" });

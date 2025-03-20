@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 interface LoginFormProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess?: () => void;
 }
 
 export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -19,7 +21,10 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
     },
     onSuccess: () => {
       setPassword("");
-      onLoginSuccess();
+      // Redirect to the admin page
+      setLocation("/admin");
+      // Also call the onLoginSuccess prop if provided (for backward compatibility)
+      if (onLoginSuccess) onLoginSuccess();
     },
     onError: (error) => {
       toast({

@@ -14,6 +14,10 @@ export interface IStorage {
   addFine(fine: InsertFine): Promise<Fine>;
   deleteFine(id: number): Promise<void>;
   getUniquePlayers(): Promise<string[]>;
+  
+  // Player management
+  addPlayer(playerName: string): Promise<string>;
+  deletePlayer(playerName: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -82,7 +86,9 @@ export class MemStorage implements IStorage {
   async getPlayerTotals(): Promise<{ speler: string; totaal: number }[]> {
     const playerTotals = new Map<string, number>();
     
-    for (const fine of this.fines.values()) {
+    // Convert to array and then iterate to avoid MapIterator issues
+    const finesArray = Array.from(this.fines.values());
+    for (const fine of finesArray) {
       const currentTotal = playerTotals.get(fine.speler) || 0;
       playerTotals.set(fine.speler, currentTotal + Number(fine.bedrag));
     }
@@ -123,11 +129,46 @@ export class MemStorage implements IStorage {
   async getUniquePlayers(): Promise<string[]> {
     const players = new Set<string>();
     
-    for (const fine of this.fines.values()) {
+    // Convert to array and then iterate to avoid MapIterator issues
+    const finesArray = Array.from(this.fines.values());
+    for (const fine of finesArray) {
       players.add(fine.speler);
     }
     
     return Array.from(players);
+  }
+  
+  // Player management methods
+  async addPlayer(playerName: string): Promise<string> {
+    if (!playerName.trim()) {
+      throw new Error("Speler naam mag niet leeg zijn");
+    }
+    
+    const existingPlayers = await this.getUniquePlayers();
+    if (existingPlayers.includes(playerName)) {
+      throw new Error("Speler bestaat al");
+    }
+    
+    // Add an empty fine for this player to register them
+    // Amount of 0 won't impact totals but establishes the player
+    await this.addFine({
+      speler: playerName,
+      bedrag: 0,
+      reden: "Nieuwe speler toegevoegd"
+    });
+    
+    return playerName;
+  }
+  
+  async deletePlayer(playerName: string): Promise<void> {
+    // Get all fines for this player
+    const playerFines = Array.from(this.fines.values())
+      .filter(fine => fine.speler === playerName);
+    
+    // Delete all fines for this player
+    for (const fine of playerFines) {
+      await this.deleteFine(fine.id);
+    }
   }
 }
 

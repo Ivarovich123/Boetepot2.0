@@ -9,10 +9,8 @@ interface HeaderProps {
 export default function Header({ onThemeToggle, isDarkMode }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 mx-4 my-5 md:mx-6 rounded-xl bg-primary shadow-lg flex justify-between items-center p-4 md:p-5">
-      <Link href="/">
-        <a className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white hover:text-gray-100 transition-colors">
-          Boetepot Heren 8
-        </a>
+      <Link href="/" className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white hover:text-gray-100 transition-colors">
+        Boetepot Heren 8
       </Link>
       <div className="flex items-center space-x-4">
         <button

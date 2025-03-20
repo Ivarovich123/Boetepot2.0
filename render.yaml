@@ -16,3 +16,5 @@ services:
         generateValue: true
       - key: PORT
         value: 10000
+      - key: NODE_OPTIONS
+        value: "--experimental-specifier-resolution=node"

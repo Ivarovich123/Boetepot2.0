@@ -12,11 +12,17 @@ export function formatCurrency(value: number): string {
 export function formatDate(dateStr: string | Date): string {
   try {
     const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
-    return new Intl.DateTimeFormat('nl-NL', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    }).format(date);
+    
+    // Get day as number (without leading zero)
+    const day = date.getDate();
+    
+    // Get month name in Dutch
+    const monthNames = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 
+                      'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
+    const month = monthNames[date.getMonth()];
+    
+    // Return formatted date like "6 Maart"
+    return `${day} ${month}`;
   } catch (e) {
     return String(dateStr);
   }

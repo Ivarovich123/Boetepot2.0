@@ -1,4 +1,5 @@
-import { fines, type Fine, type InsertFine, users, type User, type InsertUser } from "@shared/schema";
+import { fines, type Fine, type InsertFine, users, type User, type InsertUser, 
+  reasons, type Reason, type InsertReason } from "@shared/schema";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -13,30 +14,55 @@ export interface IStorage {
   getAllFines(): Promise<Fine[]>;
   addFine(fine: InsertFine): Promise<Fine>;
   deleteFine(id: number): Promise<void>;
+  resetAllFines(): Promise<void>;
   getUniquePlayers(): Promise<string[]>;
   
   // Player management
   addPlayer(playerName: string): Promise<string>;
   deletePlayer(playerName: string): Promise<void>;
+  
+  // Reason management
+  getAllReasons(): Promise<Reason[]>;
+  addReason(reason: InsertReason): Promise<Reason>;
+  deleteReason(id: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private fines: Map<number, Fine>;
+  private reasons: Map<number, Reason>;
   private currentUserId: number;
   private currentFineId: number;
+  private currentReasonId: number;
 
   constructor() {
     this.users = new Map();
     this.fines = new Map();
+    this.reasons = new Map();
     this.currentUserId = 1;
     this.currentFineId = 1;
+    this.currentReasonId = 1;
 
     // Add default admin user
     this.createUser({
       username: "admin",
-      password: "admin" // In production, this would be hashed
+      password: "Mandje123" // In production, this would be hashed
     });
+
+    // Add some initial reasons manually (not using addReason to avoid method call before definition)
+    const reasonTraining: Reason = {
+      id: this.currentReasonId++,
+      naam: "Te laat op training",
+      bedrag: 5.00
+    };
+    this.reasons.set(reasonTraining.id, reasonTraining);
+    
+    const reasonPhone: Reason = {
+      id: this.currentReasonId++,
+      naam: "Telefoon tijdens teambespreking",
+      bedrag: 7.50
+    };
+    this.reasons.set(reasonPhone.id, reasonPhone);
 
     // Add some initial fines for demo purposes
     this.addFine({
@@ -169,6 +195,42 @@ export class MemStorage implements IStorage {
     for (const fine of playerFines) {
       await this.deleteFine(fine.id);
     }
+  }
+  
+  // Reset all fines (start new season)
+  async resetAllFines(): Promise<void> {
+    // Clear all fines
+    this.fines.clear();
+    this.currentFineId = 1;
+  }
+  
+  // Reason management methods
+  async getAllReasons(): Promise<Reason[]> {
+    return Array.from(this.reasons.values());
+  }
+  
+  async addReason(insertReason: InsertReason): Promise<Reason> {
+    if (!insertReason.naam.trim()) {
+      throw new Error("Reden mag niet leeg zijn");
+    }
+    
+    // Check if reason already exists
+    const existingReason = Array.from(this.reasons.values()).find(
+      (reason) => reason.naam === insertReason.naam
+    );
+    
+    if (existingReason) {
+      throw new Error("Deze reden bestaat al");
+    }
+    
+    const id = this.currentReasonId++;
+    const reason: Reason = { ...insertReason, id };
+    this.reasons.set(id, reason);
+    return reason;
+  }
+  
+  async deleteReason(id: number): Promise<void> {
+    this.reasons.delete(id);
   }
 }
 

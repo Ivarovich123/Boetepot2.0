@@ -32,3 +32,17 @@ export const insertFineSchema = createInsertSchema(fines).pick({
 
 export type InsertFine = z.infer<typeof insertFineSchema>;
 export type Fine = typeof fines.$inferSelect;
+
+export const reasons = pgTable("reasons", {
+  id: serial("id").primaryKey(),
+  naam: text("naam").notNull().unique(),
+  bedrag: doublePrecision("bedrag").notNull().default(5),
+});
+
+export const insertReasonSchema = createInsertSchema(reasons).pick({
+  naam: true,
+  bedrag: true,
+});
+
+export type InsertReason = z.infer<typeof insertReasonSchema>;
+export type Reason = typeof reasons.$inferSelect;
